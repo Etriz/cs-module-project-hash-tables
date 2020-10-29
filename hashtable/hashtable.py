@@ -24,6 +24,7 @@ class HashTable:
     def __init__(self, capacity):
         # Your code here
         self.capacity = capacity
+        self.items = [None] * capacity
 
     def get_num_slots(self):
         """
@@ -45,6 +46,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        pass
 
     def fnv1(self, key):
         """
@@ -54,6 +56,7 @@ class HashTable:
         """
 
         # Your code here
+        pass
 
     def djb2(self, key):
         """
@@ -84,8 +87,15 @@ class HashTable:
         Implement this.
         """
         # Your code here
-        new_index = self.hash_index(key)
-        return HashTableEntry(new_index, value)
+        new_entry = HashTableEntry(key, value)
+        index = self.hash_index(key)
+        # check to see if index is empty
+        if self.items[index] == None:
+            self.items[index] = new_entry
+        # if index is not empty and the key matches update its value
+        elif self.items[index].key == key:
+            self.items[index].value = value
+        # fix collision if index is not empty and the key doesnt match
 
     def delete(self, key):
         """
@@ -96,6 +106,11 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        index = self.hash_index(key)
+        if self.items[index].key == key:
+            self.items[index] = None
+        else:
+            print(f"Key not found")
 
     def get(self, key):
         """
@@ -106,6 +121,11 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        index = self.hash_index(key)
+        if self.items[index] is None:
+            return None
+        else:
+            return self.items[index].value
 
     def resize(self, new_capacity):
         """
@@ -115,6 +135,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        pass
 
 
 if __name__ == "__main__":
