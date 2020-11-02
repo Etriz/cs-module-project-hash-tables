@@ -9,68 +9,6 @@ class HashTableEntry:
         self.next = None
 
 
-class LinkedList:
-    def __init__(self):
-        self.head = None
-
-    def __repr__(self):
-        currStr = ""
-        curr = self.head
-        while curr != None:
-            currStr += f"{str(curr.value)} ->"
-            curr = curr.next
-        return currStr
-
-    # return node w/ value
-    # runtime: O(n) where n = number nodes
-    def find(self, value):
-        curr = self.head
-        while curr != None:
-            if curr.value == value:
-                return curr
-            curr = curr.next
-        return None
-
-    # deletes node w/ given value then return that node
-    # runtime: O(n) where n = number of nodes
-    def delete(self, value):
-        curr = self.head
-
-        # special case if we need to delete the head
-        if curr.value == value:
-            self.head = curr.next
-            curr.next = None
-            return curr
-
-        prev = None
-
-        while curr != None:
-            if curr.value == value:
-                prev.next = curr.next
-                curr.next = None
-                return curr
-            else:
-                prev = curr
-                curr = curr.next
-
-        return None
-
-    # insert node at head of list
-    # runtime: O(1)
-    def insert_at_head(self, node):
-        node.next = self.head
-        self.head = node
-
-    # overwrite node or insert node at head
-    # runtime: O(n)
-    def insert_at_head_or_overwrite(self, node):
-        existingNode = self.find(node.value)  # O(n)
-        if existingNode != None:
-            existingNode.value = node.value
-        else:
-            self.insert_at_head(node)  # O(1)
-
-
 # Hash table can't have fewer than this many slots
 MIN_CAPACITY = 8
 
@@ -86,7 +24,7 @@ class HashTable:
     def __init__(self, capacity):
         # Your code here
         self.capacity = capacity
-        self.table = [None] * capacity
+        self.table = [None] * self.capacity
         self.num_items = 0
 
     def get_num_slots(self):
@@ -151,15 +89,29 @@ class HashTable:
         Implement this.
         """
         # Your code here
-        new_entry = HashTableEntry(key, value)
+        new_entry_node = HashTableEntry(key, value)
         index = self.hash_index(key)
+        list_entry_node = self.table[index]
+
         # check to see if index is empty
-        if self.table[index] == None:
-            self.table[index] = new_entry
-        # if index is not empty and the key matches update its value
-        elif self.table[index].key == key:
-            self.table[index].value = value
-        # fix collision if index is not empty and the key doesnt match
+        if list_entry_node is None:
+            self.table[index] = new_entry_node
+            self.num_items += 1
+            self.check_if_needs_resize()
+            return
+
+        # if index is not empty
+        while list_entry_node.next is not None and list_entry_node.key != key:
+            list_entry_node = list_entry_node.next
+        # overwrite if key already exists
+        if list_entry_node.key == key:
+            list_entry_node.value = value
+        # or add new entry to tail if key doesnt exist
+        else:
+            list_entry_node.next = new_entry_node
+            self.num_items += 1
+            self.check_if_needs_resize()
+        return
 
     def delete(self, key):
         """
@@ -171,10 +123,26 @@ class HashTable:
         """
         # Your code here
         index = self.hash_index(key)
-        if self.table[index].key == key:
-            self.table[index] = None
-        else:
+        list_entry_node = self.table[index]
+        prev_node = None
+
+        if list_entry_node is None:
             print(f"Key not found")
+            return
+
+        while list_entry_node.next is not None and list_entry_node.key != key:
+            prev_node = list_entry_node
+            list_entry_node = list_entry_node.next
+
+        if list_entry_node.key == key:
+            # if we find it at head
+            if prev_node is None:
+                self.table[index] = list_entry_node.next
+            else:
+                prev_node.next = list_entry_node.next
+
+            self.num_items -= 1
+            self.check_if_needs_resize()
 
     def get(self, key):
         """
@@ -186,10 +154,19 @@ class HashTable:
         """
         # Your code here
         index = self.hash_index(key)
-        if self.table[index] is None:
+        list_entry_node = self.table[index]
+        # return none if no list is found at index
+        if list_entry_node is None:
             return None
+
+        # look through list to find node with key
+        while list_entry_node.next is not None and list_entry_node.key != key:
+            list_entry_node = list_entry_node.next
+
+        if list_entry_node.key == key:
+            return list_entry_node.value
         else:
-            return self.table[index].value
+            return None
 
     def resize(self, new_capacity):
         """
@@ -199,18 +176,35 @@ class HashTable:
         Implement this.
         """
         # Your code here
-        pass
+        current_table = self.table
+        self.capacity = new_capacity
+        self.table = [None] * self.capacity
+
+        for item in current_table:
+            if item is not None:
+                self.put(item.key, item.value)
+
+    def check_if_needs_resize(self):
+        if self.get_load_factor() > 0.7:
+            self.resize(self.capacity * 2)
+
+        # elif self.get_load_factor() < 0.2:
+        #     if self.capacity > MIN_CAPACITY * 2:
+        #         self.resize((self.capacity + 1) // 2)
 
 
 if __name__ == "__main__":
     ht = HashTable(8)
 
+    print(f"start with {ht.get_num_slots()} slots")
     ht.put("line_1", "'Twas brillig, and the slithy toves")
     ht.put("line_2", "Did gyre and gimble in the wabe:")
     ht.put("line_3", "All mimsy were the borogoves,")
     ht.put("line_4", "And the mome raths outgrabe.")
     ht.put("line_5", '"Beware the Jabberwock, my son!')
     ht.put("line_6", "The jaws that bite, the claws that catch!")
+    # print(ht.get_load_factor())
+    # print(f"{ht.get_num_slots()} slots")
     ht.put("line_7", "Beware the Jubjub bird, and shun")
     ht.put("line_8", 'The frumious Bandersnatch!"')
     ht.put("line_9", "He took his vorpal sword in hand;")
@@ -219,7 +213,9 @@ if __name__ == "__main__":
     ht.put("line_12", "And stood awhile in thought.")
 
     print("")
-    print(ht.get("line_1"))
+    # print(ht.get("line_1"))
+    # print(f"{ht.get_num_slots()} slots")
+
 
 """
     # Test storing beyond capacity
@@ -229,6 +225,7 @@ if __name__ == "__main__":
     # Test resizing
     old_capacity = ht.get_num_slots()
     ht.resize(ht.capacity * 2)
+    # ht.resize(1024)
     new_capacity = ht.get_num_slots()
 
     print(f"\nResized from {old_capacity} to {new_capacity}.\n")
