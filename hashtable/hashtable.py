@@ -113,6 +113,24 @@ class HashTable:
             self.check_if_needs_resize()
         return
 
+        # #! class example code using LinkedList class structure
+        # hash_index = self.hash_index(key)
+        # if self.table[hash_index] != None:
+        #     linked_list = self.table[hash_index]
+        #     did_add_new_node = linked_list.insert_at_head_or_overwrite(
+        #         Node(HashTableEntry(key, value))
+        #     )
+        #     if did_add_new_node:
+        #         self.num_items += 1
+        # else:
+        #     linked_list = LinkedList()
+        #     linked_list.insert_at_head_or_overwrite(Node(HashTableEntry(key, value)))
+        #     self.table[hash_index] = linked_list
+        #     self.num_items += 1
+
+        # if self.get_load_factor() > 0.7:
+        #     self.resize(self.get_num_slots() * 2)
+
     def delete(self, key):
         """
         Remove the value stored with the given key.
@@ -144,6 +162,21 @@ class HashTable:
             self.num_items -= 1
             self.check_if_needs_resize()
 
+        """
+        #! class example code using LinkedList class structure
+        hash_index = self.hash_index(key)
+        if self.table[hash_index] != None:
+            linked_list = self.table[hash_index]
+            did_delete_node = linked_list.delete(HashTableEntry(key, None))
+            if did_delete_node:
+                self.num_items -= 1
+        else:
+            print("Warning: node not found")
+
+        if self.get_load_factor() < 0.2:
+            self.resize(self.get_num_slots() / 2)
+        """
+
     def get(self, key):
         """
         Retrieve the value stored with the given key.
@@ -168,6 +201,17 @@ class HashTable:
         else:
             return None
 
+        """
+        #! class example code using LinkedList class structure
+        hash_index = self.hash_index(key)
+        if self.table[hash_index] != None:
+            linked_list = self.table[hash_index]
+            node = linked_list.find(HashTableEntry(key, None))
+            if node != None:
+                return node.value.value
+        return None
+        """
+
     def resize(self, new_capacity):
         """
         Changes the capacity of the hash table and
@@ -183,6 +227,32 @@ class HashTable:
         for item in current_table:
             if item is not None:
                 self.put(item.key, item.value)
+
+        """
+        #! class example code using LinkedList class structure
+        old_table = self.table
+        self.table = [None] * int(new_capacity)
+        self.num_items = 0
+
+        for element in old_table:
+            if element == None:
+                continue
+            curr_node = element.head
+            while curr_node != None:
+                temp = curr_node.next
+                curr_node.next = None
+                hash_index = self.hash_index(curr_node.value.key)
+
+                if self.table[hash_index] != None:
+                    self.table[hash_index].insert_at_head(curr_node)
+                else:
+                    linked_list = LinkedList()
+                    linked_list.insert_at_head(curr_node)
+                    self.table[hash_index] = linked_list
+
+                curr_node = temp
+                self.num_items += 1
+        """
 
     def check_if_needs_resize(self):
         if self.get_load_factor() > 0.7:
