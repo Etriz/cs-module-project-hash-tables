@@ -19,7 +19,7 @@ def slowfun(x, y):
     output, but completes quickly instead of taking ages to run.
     """
     # Your code here
-    hash_key = hash(f"{x, y}") % 50000
+    hash_key = (x, y)
     if new_dict.get(hash_key) is not None:
         return new_dict[hash_key]
 
